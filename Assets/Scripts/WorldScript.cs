@@ -45,7 +45,6 @@ public class WorldScript : MonoBehaviour
     {
         int PlayerPositionX = Mathf.FloorToInt(Player.transform.position.x) / 16;
         int PlayerPositionY = Mathf.FloorToInt(Player.transform.position.z) / 16;
-        Debug.Log(PlayerPositionX + ", " + PlayerPositionY);
         if (PlayerPositionX != WorldRenderPositionX || PlayerPositionY != WorldRenderPositionY)
         {
             WorldRenderPositionX = PlayerPositionX;
@@ -78,10 +77,11 @@ public class WorldScript : MonoBehaviour
     }
     public void QueueChunkCreation()
     {
-        if (QueuedChunks.Count > 0)
+        for (int i = 0; i < MaxChunks; i++)
         {
-            for (int i = 0; i < MaxChunks; i++)
+            if (QueuedChunks.Count > 0)
             {
+
                 Chunk newChunck = new Chunk(this, QueuedChunks.Peek().Item1, QueuedChunks.Peek().Item2, QueuedChunks.Peek().Item3);
                 WorldChunks.Add(new Tuple<Chunk, int, int>(newChunck, QueuedChunks.Peek().Item1, QueuedChunks.Peek().Item2));
                 QueuedChunks.Dequeue();
@@ -90,10 +90,11 @@ public class WorldScript : MonoBehaviour
     }
     public void AddMeshes()
     {
-        if (ChunksToHaveMeshAdded.Count > 0)
+        for (int i = 0; i < MaxChunks; i++)
         {
-            for (int i = 0; i < MaxChunks; i++)
+            if (ChunksToHaveMeshAdded.Count > 0)
             {
+
                 if(!ChunksToHaveMeshAdded.Peek().threadLocked) ChunksToHaveMeshAdded.Peek().AddMesh();
                 ChunksToHaveMeshAdded.Dequeue();
             }
@@ -139,6 +140,33 @@ public class WorldScript : MonoBehaviour
         {
             chunks.Item1.TagOffExpansion();
         }
+    }
+    public bool CheckForVoxel(Vector3 position)
+    {
+        int x = Mathf.FloorToInt(position.x);
+        int y = Mathf.FloorToInt(position.y);
+        int z = Mathf.FloorToInt(position.z);
+        Chunk chunk = FindChunk(x / Voxel.chunkSize, z / Voxel.chunkSize);
+        if (chunk == null) return false;
+        return blockTypes[chunk.GetVoxel(new Vector3(x % Voxel.chunkSize, y, z % Voxel.chunkSize))].isSolid;
+    }
+    public int GetHighestBlock(Vector3 position)
+    {
+        int x = Mathf.FloorToInt(position.x);
+        int y = Mathf.FloorToInt(position.y);
+        int z = Mathf.FloorToInt(position.z);
+        Chunk chunk = FindChunk(x / Voxel.chunkSize, z / Voxel.chunkSize);
+        int start = (y - 1 < Voxel.chunkHeight) ? y : Voxel.chunkHeight - 1;
+        if (chunk == null) return start;
+        for (int i = start; i >= 0; i--)
+        {
+            if (blockTypes[chunk.GetVoxel(new Vector3(x % Voxel.chunkSize, i, z % Voxel.chunkSize))].isSolid) 
+            {
+                Debug.Log(i);
+                return i; 
+            }
+        }
+        return start;
     }
 }
 [System.Serializable]

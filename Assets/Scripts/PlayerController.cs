@@ -24,6 +24,10 @@ public class PlayerController : MonoBehaviour
     public float gravity = -9.81f;
     public float mouseSensitivity = 100;
 
+    public Transform highlightBlock;
+    private float checkIncrement = 0.1f;
+    private float reach = 5;
+
     Vector3 velocity;
     public bool isGrounded;
     // Start is called before the first frame update
@@ -53,9 +57,40 @@ public class PlayerController : MonoBehaviour
         turning.Disable();
         jump.Disable();
     }
+    private void placeCursorBlocks()
+    {
+
+        float step = checkIncrement;
+        Vector3 lastPos = new Vector3();
+
+        while (step < reach)
+        {
+
+            Vector3 pos = cam.transform.position + (cam.transform.forward * step);
+
+            if (worldScript.CheckForVoxel(pos))
+            {
+
+                highlightBlock.position = new Vector3(Mathf.FloorToInt(pos.x)+0.5f, Mathf.FloorToInt(pos.y) + 0.5f, Mathf.FloorToInt(pos.z) + 0.5f);
+
+                highlightBlock.gameObject.SetActive(true);
+                return;
+
+            }
+
+            lastPos = new Vector3(Mathf.FloorToInt(pos.x), Mathf.FloorToInt(pos.y), Mathf.FloorToInt(pos.z));
+
+            step += checkIncrement;
+
+        }
+
+        highlightBlock.gameObject.SetActive(false);
+
+    }
     private void Update()
     {
-        if (Player.transform.position.y - worldScript.currentChunk.GetHighestBlock(new Vector3(Mathf.FloorToInt(Player.transform.position.x) % 16, Player.transform.position.y, Mathf.FloorToInt(Player.transform.position.x) % 16)) < 2)
+        placeCursorBlocks();
+        if (Player.transform.position.y - worldScript.GetHighestBlock(Player.transform.position) <= 2f)
         {
             isGrounded = true;
         }
@@ -65,12 +100,10 @@ public class PlayerController : MonoBehaviour
     }
     private void OnJump()
     {
-        velocity.y += 10f;
+        if(isGrounded)velocity.y += 10f;
     }
     private void Move()
     {
-        Debug.Log(isGrounded);
-
         float x = movement.ReadValue<Vector2>().x;
         float z = movement.ReadValue<Vector2>().y;
 

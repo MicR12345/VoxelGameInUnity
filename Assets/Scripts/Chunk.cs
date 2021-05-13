@@ -97,19 +97,6 @@ public class Chunk
         }
         return 0;
     }
-    public int GetHighestBlock(Vector3 position)
-    {
-        int x = Mathf.FloorToInt(position.x);
-        int y = Mathf.FloorToInt(position.y);
-        int z = Mathf.FloorToInt(position.z);
-        int start = (y-1 < Voxel.chunkHeight) ? y-1 : Voxel.chunkHeight-1;
-        int h = start;
-        for (int i = start; i >=0; i--)
-        {
-            if (IsVoxelSolid(new Vector3(x, i, z))) return i;
-        }
-        return start;
-    }
     public Chunk(WorldScript world,int WorldPositionX,int WorldPositionZ)
     {
         this.world = world;
@@ -347,7 +334,7 @@ public class Chunk
         {
             perlinNoise = world.Yscale * Mathf.PerlinNoise(sampleX * world.Xnoise + (float)world.seed, sampleZ * world.Znoise + (float)world.seed);
         }
-        perlinNoise = perlinNoise / (world.perlinWaves * world.Yscale);
+        perlinNoise = perlinNoise / world.perlinWaves;
         float height = world.Yscale * perlinNoise;
         return height;
     }
